@@ -14,7 +14,7 @@ export const chatGeminiHandler = async (req: Request, res: Response, next: NextF
       return res.status(400).json(response(null, new Error("message and sessionId are required")));
     }
 
-    // Emotion + safety
+    // Enhanced emotion + safety detection
     const emotion = classifyEmotion(String(message));
     const safety = detectSelfHarmTerms(String(message));
 
@@ -47,7 +47,7 @@ export const chatGeminiHandler = async (req: Request, res: Response, next: NextF
       modelResponse = "I'm here for you. Let's take a deep breath together. What happened?";
     }
 
-    const riskLevel = safety.selfHarmDetected ? "high" : "low";
+    const riskLevel = safety.riskLevel;
 
     // Store user message encrypted
     try {
@@ -69,14 +69,26 @@ export const chatGeminiHandler = async (req: Request, res: Response, next: NextF
       riskLevel,
       recommendations: riskLevel === "high"
         ? [
-            "If you're in immediate danger, call your local emergency number",
-            "Reach out to a trusted friend or family member",
-            "Consider contacting a crisis hotline in your region",
+            "🚨 IMMEDIATE: Call 988 (Suicide & Crisis Lifeline) or 911",
+            "📞 Crisis Text Line: Text HOME to 741741",
+            "🏥 Go to your nearest emergency room if in immediate danger",
+            "🤝 Reach out to a trusted friend, family member, or counselor",
+            "💙 Remember: You matter, and this feeling is temporary"
+          ]
+        : riskLevel === "medium"
+        ? [
+            "📞 Consider calling 988 for support and guidance",
+            "🗣️ Talk to a trusted friend, family member, or counselor",
+            "📝 Write down your feelings in a journal",
+            "🧘 Try a grounding exercise: 5 things you see, 4 you hear, 3 you feel",
+            "🌱 Remember: Seeking help is a sign of strength"
           ]
         : [
-            "Try a 5-minute grounding exercise",
-            "Go for a short walk",
-            "Write one small goal for tomorrow",
+            "🧘 Try a 5-minute mindfulness or breathing exercise",
+            "🚶 Take a gentle walk outside if possible",
+            "📝 Write down one small, achievable goal for today",
+            "🎵 Listen to calming music or sounds",
+            "☕ Make yourself a warm drink and take a moment to pause"
           ],
     };
 

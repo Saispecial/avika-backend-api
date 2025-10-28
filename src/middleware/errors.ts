@@ -1,30 +1,55 @@
-import { response } from "@/utils/response.js";
-import { notImplementedError, internalServerError } from "@/utils/errors/common.js";
-import { HttpError } from "@/utils/errors/HttpError.js";
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
-// Global Error Handler Middleware
-export const globalErrorHandler = (
-  err: HttpError | Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) => {
-  console.error(`Timestamp: ${new Date().toISOString()}`);
-  console.error("Error:", err);
-
-  let responseStatus = 500;
-  let errorResponse = internalServerError(); // Default to internal server error
-
-  if (err instanceof HttpError) {
-    responseStatus = err.status;
-    errorResponse = err;
+/**
+ * Middleware to handle endpoints that are not implemented
+ */
+export const endpointNotImplemented = (req: Request, res: Response, next: NextFunction) => {
+  // Only handle if no response has been sent yet
+  if (!res.headersSent) {
+    res.status(404).json({
+      success: false,
+      error: {
+        code: "ENDPOINT_NOT_FOUND",
+        message: `Endpoint ${req.method} ${req.path} not found`,
+        timestamp: new Date().toISOString()
+      }
+    });
   }
-  
-  res.status(responseStatus).send(response(undefined, errorResponse));
 };
 
-// Middleware for handling requests that don't match any available router
-export const endpointNotImplemented: RequestHandler = (_req, _res, next) => {
-  next(notImplementedError());
+/**
+ * Global error handler middleware
+ */
+export const globalErrorHandler = (
+  error: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  console.error("Global Error Handler:", {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    path: req.path,
+    error: error.message,
+    stack: error.stack
+  });
+
+  // Don't send response if headers already sent
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  // Determine status code
+  const statusCode = error.status || error.statusCode || 500;
+
+  // Send error response
+  res.status(statusCode).json({
+    success: false,
+    error: {
+      code: error.code || "INTERNAL_SERVER_ERROR",
+      message: error.message || "An unexpected error occurred",
+      timestamp: new Date().toISOString(),
+      ...(process.env.NODE_ENV === "development" && { stack: error.stack })
+    }
+  });
 };

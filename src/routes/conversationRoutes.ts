@@ -4,9 +4,9 @@ import {
   processEmotionHandler,
   engageConversationHandler,
   finalStageHandler,
-} from "@/controllers/conversationController";
-import { safetyDetectionMiddleware } from "@/middleware/safetyDetectionMiddleware";
-import { emotionRecognitionMiddleware } from "@/middleware/emotionRecognitionMiddleware";
+} from "@/controllers/conversationController.js";
+import { safetyDetectionMiddleware } from "@/middleware/safetyDetectionMiddleware.js";
+import { emotionRecognitionMiddleware } from "@/middleware/emotionRecognitionMiddleware.js";
 
 const router = express.Router();
 
